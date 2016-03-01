@@ -61,4 +61,6 @@ var (
 	ErrIRNoColumns     = errors.New("insert or replace must specify columns")
 	ErrIRNoShardingKey = errors.New("insert or replace not contain sharding key")
 	ErrColsLenNotMatch = errors.New("insert or replace cols and values length not match")
+
+	ErrRowNumOverflow = errors.New("Result row number overflow")
 )

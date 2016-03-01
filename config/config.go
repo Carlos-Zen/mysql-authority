@@ -26,6 +26,7 @@ type Config struct {
 	User        string       `yaml:"user"`
 	Password    string       `yaml:"password"`
 	LogPath     string       `yaml:"log_path"`
+	ResultLimit string       `yaml:"result_limit"`
 	LogLevel    string       `yaml:"log_level"`
 	LogSql      string       `yaml:"log_sql"`
 	SlowLogTime int          `yaml:"slow_log_time"`

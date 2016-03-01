@@ -49,6 +49,10 @@ type Router struct {
 	Nodes       []string //just for human saw
 }
 
+func (r *Rule) SetNodes(node string) {
+	r.Nodes = []string{node}
+}
+
 func NewDefaultRule(db string, node string) *Rule {
 	var r *Rule = &Rule{
 		DB:          db,

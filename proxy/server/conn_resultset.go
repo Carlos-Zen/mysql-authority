@@ -136,6 +136,7 @@ func (c *ClientConn) buildResultset(fields []*mysql.Field, names []string, value
 	return r, nil
 }
 
+// carlos update 2016-02-22 . Add resultset rows limit.
 func (c *ClientConn) writeResultset(status uint16, r *mysql.Resultset) error {
 	c.affectedRows = int64(-1)
 	total := make([]byte, 0, 1024)
@@ -163,7 +164,11 @@ func (c *ClientConn) writeResultset(status uint16, r *mysql.Resultset) error {
 	if err != nil {
 		return err
 	}
-
+	//Resultrow number limit
+	limit, _ := strconv.Atoi(c.proxy.cfg.ResultLimit)
+	if r.RowNumber() > limit {
+		return errors.ErrRowNumOverflow
+	}
 	for _, v := range r.RowDatas {
 		data = data[0:4]
 		data = append(data, v...)

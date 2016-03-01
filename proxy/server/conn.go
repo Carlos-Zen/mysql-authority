@@ -26,6 +26,7 @@ import (
 	"github.com/flike/kingshard/core/golog"
 	"github.com/flike/kingshard/core/hack"
 	"github.com/flike/kingshard/mysql"
+	"github.com/sqlauth/carlos"
 )
 
 //client <-> proxy
@@ -48,6 +49,8 @@ type ClientConn struct {
 
 	user string
 	db   string
+
+	result int
 
 	salt []byte
 
@@ -226,16 +229,18 @@ func (c *ClientConn) readHandshakeResponse() error {
 	pos++
 	auth := data[pos : pos+authLen]
 
-	checkAuth := mysql.CalcPassword(c.salt, []byte(c.proxy.cfg.Password))
-	if c.user != c.proxy.cfg.User || !bytes.Equal(auth, checkAuth) {
+	//checkAuth := mysql.CalcPassword(c.salt, []byte(c.proxy.cfg.Password))
+	checkAu, acc := carlos.Check(c.user, auth, c.salt)
+	if !checkAu {
 		golog.Error("ClientConn", "readHandshakeResponse", "error", 0,
 			"auth", auth,
-			"checkAuth", checkAuth,
+			"checkAu", checkAu,
 			"client_user", c.user,
 			"config_set_user", c.proxy.cfg.User,
 			"passworld", c.proxy.cfg.Password)
 		return mysql.NewDefaultError(mysql.ER_ACCESS_DENIED_ERROR, c.user, c.c.RemoteAddr().String(), "Yes")
 	}
+	c.schema.rule.DefaultRule.SetNodes(acc.Node)
 
 	pos += authLen
 
@@ -249,14 +254,15 @@ func (c *ClientConn) readHandshakeResponse() error {
 		pos += len(c.db) + 1
 
 	} else {
-		//if connect without database, use default db
-		db = c.proxy.schema.db
+		if acc.Node == "node2" {
+			db = "jd-java"
+		} else {
+			db = "jd-user"
+		}
 	}
-
 	if err := c.useDB(db); err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -303,7 +309,6 @@ func (c *ClientConn) dispatch(data []byte) error {
 	c.proxy.counter.IncrClientQPS()
 	cmd := data[0]
 	data = data[1:]
-
 	switch cmd {
 	case mysql.COM_QUIT:
 		c.Close()

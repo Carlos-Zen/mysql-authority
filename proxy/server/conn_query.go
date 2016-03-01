@@ -193,8 +193,9 @@ func (c *ClientConn) executeInNode(conn *backend.BackendConn, sql string, args [
 	if strings.ToLower(c.proxy.cfg.LogSql) != golog.LogSqlOff &&
 		execTime > float64(c.proxy.cfg.SlowLogTime) {
 		c.proxy.counter.IncrSlowLogTotal()
-		golog.OutputSql(state, "%.1fms - %s->%s:%s",
+		golog.OutputSql(state, "%.1fms - %s@%s->%s : %s",
 			execTime,
+			c.user,
 			c.c.RemoteAddr(),
 			conn.GetAddr(),
 			sql,

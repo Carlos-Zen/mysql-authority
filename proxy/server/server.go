@@ -317,7 +317,6 @@ func (s *Server) onConn(c net.Conn) {
 		c.Close()
 		return
 	}
-
 	conn.Run()
 }
 

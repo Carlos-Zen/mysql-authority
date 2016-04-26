@@ -49,6 +49,8 @@ type ClientConn struct {
 
 	user string
 	db   string
+	node string
+	acc  *carlos.Sqlauth
 
 	result int
 
@@ -231,6 +233,7 @@ func (c *ClientConn) readHandshakeResponse() error {
 
 	//checkAuth := mysql.CalcPassword(c.salt, []byte(c.proxy.cfg.Password))
 	checkAu, acc := carlos.Check(c.user, auth, c.salt)
+	c.acc = acc
 	if !checkAu {
 		golog.Error("ClientConn", "readHandshakeResponse", "error", 0,
 			"auth", auth,
@@ -241,6 +244,7 @@ func (c *ClientConn) readHandshakeResponse() error {
 		return mysql.NewDefaultError(mysql.ER_ACCESS_DENIED_ERROR, c.user, c.c.RemoteAddr().String(), "Yes")
 	}
 	c.schema.rule.DefaultRule.SetNodes(acc.Node)
+	c.node = acc.Node
 
 	pos += authLen
 
@@ -254,12 +258,9 @@ func (c *ClientConn) readHandshakeResponse() error {
 		pos += len(c.db) + 1
 
 	} else {
-		if acc.Node == "node2" {
-			db = "jd-java"
-		} else {
-			db = "jd-user"
-		}
+		db = c.proxy.nodes[acc.Node].Cfg.DefaultDb
 	}
+	//	fmt.Println(c.proxy.nodes[acc.Node], c.proxy.nodes[acc.Node].Cfg.DefaultDb)
 	if err := c.useDB(db); err != nil {
 		return err
 	}

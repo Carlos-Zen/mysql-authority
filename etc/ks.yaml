@@ -40,6 +40,7 @@ nodes :
 
     # master represents a real mysql master server 
     master : 192.168.32.14:3306
+    default_db : jd-user
 
     # slave represents a real mysql salve server,and the number after '@' is 
     # read load weight of this slave.
@@ -57,6 +58,7 @@ nodes :
 
     # master represents a real mysql master server 
     master : 192.168.32.13:3306
+    default_db : jd-java
 
     # slave represents a real mysql salve server 
     slave : 

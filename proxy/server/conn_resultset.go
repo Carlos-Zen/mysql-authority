@@ -17,6 +17,7 @@ package server
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/flike/kingshard/core/errors"
 	"github.com/flike/kingshard/core/hack"
@@ -87,7 +88,6 @@ func formatField(field *mysql.Field, value interface{}) error {
 func (c *ClientConn) buildResultset(fields []*mysql.Field, names []string, values [][]interface{}) (*mysql.Resultset, error) {
 	var ExistFields bool
 	r := new(mysql.Resultset)
-
 	r.Fields = make([]*mysql.Field, len(names))
 	//use the field def that get from true database
 	if len(fields) != 0 {
@@ -122,18 +122,39 @@ func (c *ClientConn) buildResultset(fields []*mysql.Field, names []string, value
 				}
 
 			}
-			b, err = formatValue(value)
+			if InSlice(strings.Split("_bank_card,u_name,_id_card", ","), names[j]) {
+				b, err = formatValue("***")
+			} else if strings.Contains(names[j], "mobile") || strings.Contains(names[j], "logname") {
+				b, err = formatValue(18888888888)
+			} else {
+				b, err = formatValue(value)
+			}
 			if err != nil {
 				return nil, err
 			}
+			if value == nil {
+				row = append(row, 0xfb)
 
-			row = append(row, mysql.PutLengthEncodedString(b)...)
+			} else {
+				row = append(row, mysql.PutLengthEncodedString(b)...)
+			}
+
 		}
 
 		r.RowDatas = append(r.RowDatas, row)
 	}
 
 	return r, nil
+}
+
+//in slice
+func InSlice(ss []string, sep string) bool {
+	for _, v := range ss {
+		if strings.Contains(sep, v) {
+			return true
+		}
+	}
+	return false
 }
 
 // carlos update 2016-02-22 . Add resultset rows limit.
@@ -163,11 +184,6 @@ func (c *ClientConn) writeResultset(status uint16, r *mysql.Resultset) error {
 	total, err = c.writeEOFBatch(total, status, false)
 	if err != nil {
 		return err
-	}
-	//Resultrow number limit
-	limit, _ := strconv.Atoi(c.proxy.cfg.ResultLimit)
-	if r.RowNumber() > limit {
-		return errors.ErrRowNumOverflow
 	}
 	for _, v := range r.RowDatas {
 		data = data[0:4]

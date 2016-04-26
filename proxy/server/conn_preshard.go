@@ -16,6 +16,7 @@ package server
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/flike/kingshard/backend"
@@ -60,6 +61,17 @@ func (c *ClientConn) preHandleShard(sql string) (bool, error) {
 			return false, err
 		}
 	}
+	//filter deny table/keywords in sql
+	countLimit, _ := strconv.Atoi(c.proxy.cfg.ResultLimit)
+	if err = c.acc.IsSqlWasDenied(sql, countLimit); err != nil {
+		golog.OutputSql("Forbidden", "%s->%s:%s",
+			c.c.RemoteAddr(),
+			c.proxy.addr,
+			sql,
+		)
+		err := mysql.NewError(mysql.ER_UNKNOWN_ERROR, err.Error())
+		return false, err
+	}
 
 	tokens := strings.Fields(sql)
 	if len(tokens) == 0 {
@@ -97,7 +109,23 @@ func (c *ClientConn) preHandleShard(sql string) (bool, error) {
 	}
 
 	if rs[0].Resultset != nil {
-		err = c.writeResultset(c.status, rs[0].Resultset)
+		rset := rs[0].Resultset
+		if rset.RowNumber() > 0 {
+			names := make([]string, 0, 2)
+
+			for i := 0; i < len(rset.Fields); i++ {
+				names = append(names, string(rset.Fields[i].Name))
+			}
+			rset, _ = c.buildResultset(rset.Fields, names, rset.Values)
+
+		}
+		limit, _ := strconv.Atoi(c.proxy.cfg.ResultLimit)
+		if rs[0].Resultset.RowNumber() > limit {
+			msg := fmt.Sprintf("result over limit")
+			golog.Error("ClientConn", "handleUnsupport", msg, 0, "sql", sql)
+			return false, mysql.NewError(mysql.ER_UNKNOWN_ERROR, msg)
+		}
+		err = c.writeResultset(c.status, rset)
 	} else {
 		err = c.writeOK(rs[0])
 	}
@@ -186,7 +214,8 @@ func (c *ClientConn) setExecuteNode(tokens []string, tokensLen int, executeDB *E
 		if len(defaultRule.Nodes) == 0 {
 			return errors.ErrNoDefaultNode
 		}
-		executeDB.ExecNode = c.proxy.GetNode(defaultRule.Nodes[0])
+		//executeDB.ExecNode = c.proxy.GetNode(defaultRule.Nodes[0])
+		executeDB.ExecNode = c.proxy.GetNode(c.node)
 	}
 
 	return nil

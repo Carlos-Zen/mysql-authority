@@ -269,6 +269,20 @@ func (r *Resultset) GetValue(row, column int) (interface{}, error) {
 	return r.Values[row][column], nil
 }
 
+func (r *Resultset) SetValue(row, column int, value int) error {
+	if row >= len(r.Values) || row < 0 {
+		return fmt.Errorf("invalid row index %d", row)
+	}
+
+	if column >= len(r.Fields) || column < 0 {
+		return fmt.Errorf("invalid column index %d", column)
+	}
+
+	r.Values[row][column] = value
+
+	return nil
+}
+
 func (r *Resultset) NameIndex(name string) (int, error) {
 	if column, ok := r.FieldNames[name]; ok {
 		return column, nil
@@ -282,6 +296,14 @@ func (r *Resultset) GetValueByName(row int, name string) (interface{}, error) {
 		return nil, err
 	} else {
 		return r.GetValue(row, column)
+	}
+}
+
+func (r *Resultset) SetValueByName(row int, name string, value int) error {
+	if column, err := r.NameIndex(name); err != nil {
+		return err
+	} else {
+		return r.SetValue(row, column, value)
 	}
 }
 

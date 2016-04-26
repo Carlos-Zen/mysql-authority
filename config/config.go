@@ -47,6 +47,8 @@ type NodeConfig struct {
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
 
+	DefaultDb string `yaml:"default_db"`
+
 	Master string `yaml:"master"`
 	Slave  string `yaml:"slave"`
 }

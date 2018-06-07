@@ -1,45 +1,16 @@
-#  kingshard [中文主页](README_ZH.md)
-[![Build Status](https://travis-ci.org/flike/kingshard.svg?branch=master)](https://travis-ci.org/flike/kingshard)
+# Introduction
 
-## Overview
+Mysql-authority is a mysql privilege management system that associates multiple databases through reverse proxies and constrains users' online database operations through sql analysis and role management.
 
-kingshard is a high-performance proxy for MySQL powered by Go. Just like other mysql proxies, you can use it to split the read/write sqls. Now it supports basic SQL statements (select, insert, update, replace, delete). The most important feature is the sharding function. Kingshard aims to simplify the sharding solution of MySQL. **The Performance of kingshard is about 80% compared to connecting to MySQL directly.**
+## The main function:
 
-## Feature
-- Splits reads and writes
-- Sharding table across multiple nodes
-- Client's ip ACL control.
-- Transaction in single node.
-- Support limitting the max count of connections to MySQL database.
-- Support setting the backend database online or offline dynamically.
-- Supports prepared statement: COM_STMT_PREPARE, COM_STMT_EXECUTE, etc.
-- Support multi slaves, and loading banlance between slaves.
-- Support reading master database forcely.
-- Support sending sql to the specified node.
-- Support most commonly used functions, such as `max, min, count, sum`, and also support `join, limit, order by,group by`.
-- MySQL HA.
-- Support set the charset of proxy.
-- Support SQL blacklist.
+### basic function
 
-## Install
-```
-  1. Install Go
-  2. git clone https://github.com/flike/kingshard.git src/github.com/flike/kingshard
-  3. cd src/github.com/flike/kingshard
-  4. source ./dev.sh
-  5. make
-  6. set the config file (etc/multi.yaml)
-  7. run kingshard (./bin/kingshard -config=etc/multi.yaml)
-```
-
-# Details of kingshard
-
-[1.How to use kingshard building a MySQL cluster](./doc/KingDoc/how_to_use_kingshard_EN.md)
-
-## Donate
-
-https://github.com/flike/kingshard/blob/master/doc/KingDoc/support.md
+- Support user addition and permission control.
+- Support SQL log and log output
+- Support SQL blacklist mechanism
+- Support client IP access white list mechanism
 
 ## License
 
-kingshard is under the Apache 2.0 license. See the [LICENSE](./doc/License) directory for details.
+Mysql-authority uses the Apache 2.0 protocol. For related protocols, please refer to the [catalog] (./doc/License)
